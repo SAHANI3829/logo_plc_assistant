@@ -1,0 +1,12 @@
+venv/
+Lib/
+Scripts/
+__pycache__/
+*.pyc
+*.dll
+*.pyd
+*.so
+*.csv
+*.pkl
+*.h5
+*.pdf
