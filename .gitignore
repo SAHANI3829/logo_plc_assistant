@@ -1,12 +1,36 @@
+# --- Secrets (NEVER commit these) ---
+.env
+*.env
+.env.*
+
+# --- Python virtual environment ---
 venv/
 Lib/
 Scripts/
 __pycache__/
 *.pyc
-*.dll
 *.pyd
+*.pyo
+*.dll
 *.so
-*.csv
+
+# --- ChromaDB vector database (rebuilt by embed.py) ---
+db/
+.chroma/
+*.sqlite
+*.sqlite3
+
+# --- Generated / binary output files ---
+knowledge_base_export.xlsx
+~$*.xlsx
+~$*.xls
 *.pkl
 *.h5
+*.csv
+
+# --- Large source files (too big for GitHub) ---
 *.pdf
+
+# --- OS / editor junk ---
+.DS_Store
+Thumbs.db

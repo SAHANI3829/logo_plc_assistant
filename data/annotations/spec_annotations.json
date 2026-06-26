@@ -1,0 +1,86 @@
+[
+  {
+    "id": "spec_001",
+    "query": "What are the digital input voltage thresholds and logic levels for LOGO! 8?",
+    "text": "LOGO! 8 digital input voltage thresholds depend on the module voltage class. For 24 VDC modules (LOGO! 24CE, 24CEo, DM8 24, DM16 24): logic 0 is any voltage below 5 VDC, and logic 1 is any voltage above 12 VDC, with a rated supply of 24 VDC and a maximum permissible supply of 28.8 VDC. For 115/240 VAC modules (LOGO! 230): logic 0 is below 40 VAC or below 30 VDC, and logic 1 is above 79 VAC or above 79 VDC. Inputs I3, I4, I5, and I6 are high-speed inputs and can handle frequencies up to 5 kHz; standard inputs I1, I2, I7, and I8 handle frequencies up to 4 Hz in normal mode. Maximum unshielded cable length for inputs is 100 m.",
+    "tag": "SPEC",
+    "source": "spec_annotation"
+  },
+  {
+    "id": "spec_002",
+    "query": "What are the digital output current limits and output types for LOGO! 8?",
+    "text": "LOGO! 8 digital outputs come in two types: transistor outputs and relay outputs. Transistor outputs (found on LOGO! 24CE, 24CEo, DM8 24, DM16 24) are current-sourcing, rated at a maximum of 0.3 A per channel, with the output voltage equal to or less than the supply voltage; they are short circuit-proof and overload-proof with a current limitation of approximately 1 A per output group. Relay outputs (found on LOGO! 24RC, 230RCE) carry a continuous current Ith with a relay rated voltage up to 240 VAC or VDC; the maximum incandescent lamp load is 1000 W at 230/240 VAC. All output types have a maximum unshielded cable length of 100 m. Transistor outputs must not be connected in parallel for power increase.",
+    "tag": "SPEC",
+    "source": "spec_annotation"
+  },
+  {
+    "id": "spec_003",
+    "query": "What are the analog input AI1 and AI2 voltage and current ranges for LOGO! 8?",
+    "text": "LOGO! 8 base modules with analog capability (such as LOGO! 24CE and 24CEo) provide up to four analog inputs. The analog inputs share pins with digital inputs: AI1 maps to I8, AI2 maps to I7, AI3 maps to I2, and AI4 maps to I1. The voltage input range is 0 VDC to 10 VDC, which is represented internally as a value from 0 to 1000 with 10-bit resolution. For 4 to 20 mA current input, an external 500-ohm shunt resistor must be connected across the input terminals, converting the current signal to a 2 to 10 VDC voltage that the module then reads. Analog inputs are read with a cycle time of approximately 30 ms and are not galvanically isolated from the digital inputs on the same module.",
+    "tag": "SPEC",
+    "source": "spec_annotation"
+  },
+  {
+    "id": "spec_004",
+    "query": "What are the on-delay timer parameter ranges and time bases in LOGO! 8?",
+    "text": "The LOGO! 8 on-delay timer (SF: On-delay) has a configurable time parameter T with three selectable time bases. In seconds (s): maximum value is 99.99 s (displayed as 99:99), minimum resolution is 10 ms, accuracy is plus or minus 10 ms. In minutes (m): maximum value is 99 minutes 59 seconds (displayed as 99:59), minimum resolution is 1 s, accuracy is plus or minus 1 s. In hours (h): maximum value is 99 hours 59 minutes (displayed as 99:59), minimum resolution is 1 minute, accuracy is plus or minus 1 minute. The trigger input Trg must remain continuously ON for the full duration T before the output activates; if Trg drops to 0 before T expires, the timer resets to zero. A retentivity option is available that preserves the elapsed time across power interruptions.",
+    "tag": "SPEC",
+    "source": "spec_annotation"
+  },
+  {
+    "id": "spec_005",
+    "query": "What are the off-delay timer parameter ranges and behaviour in LOGO! 8?",
+    "text": "The LOGO! 8 off-delay timer (SF: Off-delay) uses the same three time bases and ranges as the on-delay: seconds up to 99.99 s (resolution 10 ms), minutes up to 99:59 (resolution 1 s), hours up to 99:59 (resolution 1 minute). Behaviour differs from on-delay: the output Q activates immediately when the trigger input Trg goes ON, and only begins counting when Trg goes OFF. After the configured time T has elapsed following the turn-off of Trg, Q deactivates. If Trg goes ON again before the off-delay expires, the timer resets and Q stays ON. This block is used to keep a device running for a fixed time after its trigger signal is removed, such as a cooling fan that should continue running after a machine stops.",
+    "tag": "SPEC",
+    "source": "spec_annotation"
+  },
+  {
+    "id": "spec_006",
+    "query": "What are the retentive timer parameter ranges and how does it accumulate time in LOGO! 8?",
+    "text": "The LOGO! 8 retentive on-delay timer (SF: Retentive on-delay) accumulates elapsed ON time across multiple separate trigger pulses, unlike the standard on-delay which resets whenever the input goes OFF. The same three time bases apply: seconds up to 99.99 s (resolution 10 ms, accuracy plus or minus 10 ms), minutes up to 99:59 (resolution 1 s, accuracy plus or minus 1 s), hours up to 99:59 (resolution 1 minute, accuracy plus or minus 1 minute). A separate reset input R clears the accumulated time and the output. If the block has retentivity enabled, the accumulated time is preserved through a power interruption. When the total accumulated ON time of Trg reaches the preset value T, output Q activates and remains ON until R is triggered.",
+    "tag": "SPEC",
+    "source": "spec_annotation"
+  },
+  {
+    "id": "spec_007",
+    "query": "What are the up counter parameter ranges and threshold settings in LOGO! 8?",
+    "text": "The LOGO! 8 up/down counter (SF: Up/down counter) increments its internal count value by 1 on each rising edge at the count input Cnt. The counter has two configurable thresholds: an On threshold and an Off threshold, both in the range 0 to 999999. When the On threshold is greater than or equal to the Off threshold, the output Q is set to 1 when the count reaches the On value and cleared when it falls below the Off value. Counting direction is controlled by input Dir: Dir = 0 counts up, Dir = 1 counts down. A signal at reset input R resets the count to 0 and clears the output. High-speed inputs I3, I4, I5, I6 support counting at up to 5 kHz; standard inputs support up to 4 Hz.",
+    "tag": "SPEC",
+    "source": "spec_annotation"
+  },
+  {
+    "id": "spec_008",
+    "query": "What are the down counter parameter ranges and how does it count down in LOGO! 8?",
+    "text": "In LOGO! 8, down counting is implemented using the up/down counter block (SF: Up/down counter) with the direction input Dir set to 1 (counting down). The count value decrements by 1 on each rising edge at input Cnt. The configurable threshold range is 0 to 999999 for both the On threshold and Off threshold. When the On threshold is less than the Off threshold, a window comparator mode applies: the output Q is 1 when the count value lies between the On and Off thresholds. The reset input R reloads the counter or clears it depending on configuration. This block is used for dispensing, dosing, or countdown applications where a fixed quantity must be delivered and the output activates when the count reaches a target.",
+    "tag": "SPEC",
+    "source": "spec_annotation"
+  },
+  {
+    "id": "spec_009",
+    "query": "What are the pulse relay parameter ranges and timing behaviour in LOGO! 8?",
+    "text": "The LOGO! 8 pulse relay (SF: Wiping relay / pulse output) generates a fixed-duration ON pulse at output Q each time the trigger input Trg receives a 0-to-1 transition (rising edge). The pulse duration parameter T uses the same three time bases as all LOGO! timers: seconds up to 99.99 s (resolution 10 ms), minutes up to 99:59 (resolution 1 s), hours up to 99:59 (resolution 1 minute). Once triggered, the output stays ON for exactly T and then turns OFF automatically, regardless of whether the trigger input is still ON. A 1-to-0 transition at Trg during the active pulse immediately resets the output to 0. Retentivity can be enabled to preserve elapsed pulse time across a power interruption.",
+    "tag": "SPEC",
+    "source": "spec_annotation"
+  },
+  {
+    "id": "spec_010",
+    "query": "What are the memory limits and maximum block counts for a LOGO! 8 circuit program?",
+    "text": "LOGO! 8 program memory is 8500 bytes total. Each function block consumes a specific number of bytes: basic logic gates (AND, OR, NOT, NAND, NOR, XOR) consume 1 byte of program memory each; special function blocks such as timers, counters, and the latch consume more memory and additionally use retentive (Rem) memory if retentivity is enabled. There is no fixed upper limit on the number of blocks expressed as a simple count; the practical limit is determined by the total available program memory of 8500 bytes. The free memory remaining is visible on the LOGO! display under diagnostics, or in LOGO!Soft Comfort. In addition to program memory, LOGO! 8 supports up to 64 digital flag bits (M1 to M64), 64 analog flag words (AM1 to AM64), and 32 shift register bits (S1.1 to S4.8).",
+    "tag": "SPEC",
+    "source": "spec_annotation"
+  },
+  {
+    "id": "spec_011",
+    "query": "What are the power supply voltage requirements for LOGO! 8 modules?",
+    "text": "LOGO! 8 base modules are available in three voltage classes with different supply requirements. The 115/240 VAC class (LOGO! 230): rated input voltages of 115 VAC, 240 VAC, 115 VDC, or 240 VDC; power consumption is approximately 4.5 W at 240 VAC. The 24 VDC class (LOGO! 24CE, 24CEo): rated supply is 24 VDC, permissible range 21.6 VDC to 28.8 VDC; power consumption is 0.6 W to 1.2 W depending on output load; reverse polarity protection is not available on all variants. The 24 VAC/VDC class (LOGO! 24RC): rated supply 24 VAC or 24 VDC, permissible range 21.6 V to 26.4 V AC or DC. All classes provide voltage failure buffering of at least 20 ms. The real-time clock backup at 25°C lasts approximately 20 days after power removal.",
+    "tag": "SPEC",
+    "source": "spec_annotation"
+  },
+  {
+    "id": "spec_012",
+    "query": "What is the operating temperature range and environmental rating for LOGO! 8?",
+    "text": "LOGO! 8 modules are rated for an operating temperature range of minus 20 degrees C to plus 55 degrees C, tested to IEC 60068-2-1 (low temperature) and IEC 60068-2-2 (high temperature). The storage and transport temperature range is minus 40 degrees C to plus 70 degrees C. Relative humidity must be between 10% and 95% with no condensation permitted. Altitude is limited to 2000 m above sea level (atmospheric pressure 795 to 1080 hPa). LOGO! 8 modules carry an IP20 protection rating, meaning they are protected against solid objects greater than 12 mm but provide no protection against water ingress; they must be installed in a suitable enclosure for wet or dusty environments. Modules are DIN rail mountable (standard 35 mm DIN rail).",
+    "tag": "SPEC",
+    "source": "spec_annotation"
+  }
+]

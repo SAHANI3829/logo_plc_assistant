@@ -1,0 +1,432 @@
+[
+  {
+    "id": "anno_001",
+    "query": "Turn on output Q1 only when both input I1 and input I2 are active at the same time",
+    "text": "An AND gate connects two inputs so that the output Q1 is ON only when I1 and I2 are both ON simultaneously. This is used when two independent conditions must both be true before an action is allowed, such as a two-hand safety control that requires an operator to press both buttons at once. If either input goes OFF, Q1 turns OFF immediately.",
+    "tag": "LD",
+    "source": "annotation",
+    "logojson": {
+      "description": "AND gate: Q1 is ON only when I1 AND I2 are both ON simultaneously",
+      "blocks": [
+        {"id": "B1", "type": "AND", "inputs": ["I1", "I2"]},
+        {"id": "B2", "type": "OUTPUT", "input": "B1", "pin": "Q1"}
+      ]
+    }
+  },
+  {
+    "id": "anno_002",
+    "query": "Turn on output Q1 when either input I1 or input I2 is active",
+    "text": "An OR gate allows either of two inputs to switch the output ON, so Q1 turns ON when I1 is ON, when I2 is ON, or when both are ON. This is the standard wiring pattern for multiple push-buttons that all control the same device, such as two call buttons in different rooms that ring the same bell. Q1 only turns OFF when both I1 and I2 are OFF at the same time.",
+    "tag": "LD",
+    "source": "annotation",
+    "logojson": {
+      "description": "OR gate: Q1 is ON when I1 OR I2 (or both) are ON",
+      "blocks": [
+        {"id": "B1", "type": "OR", "inputs": ["I1", "I2"]},
+        {"id": "B2", "type": "OUTPUT", "input": "B1", "pin": "Q1"}
+      ]
+    }
+  },
+  {
+    "id": "anno_003",
+    "query": "Turn on the output when the input is OFF, and turn it off when the input is ON",
+    "text": "A NOT gate inverts the signal so Q1 is ON when I1 is OFF, and OFF when I1 is ON. This is used for fail-safe designs where a broken wire or missing signal should trigger a response, or when you need to flip the logic of an existing sensor. It is also used to drive a complementary indicator, such as a green light that shows the absence of a fault.",
+    "tag": "LD",
+    "source": "annotation",
+    "logojson": {
+      "description": "NOT gate: Q1 is ON when I1 is OFF (inverted logic)",
+      "blocks": [
+        {"id": "B1", "type": "NOT", "input": "I1"},
+        {"id": "B2", "type": "OUTPUT", "input": "B1", "pin": "Q1"}
+      ]
+    }
+  },
+  {
+    "id": "anno_004",
+    "query": "Output Q1 should only turn on when all three inputs I1, I2, and I3 are active together",
+    "text": "A three-input AND gate requires all three signals to be ON simultaneously before Q1 activates. This pattern is used in safety-critical systems where multiple independent sensors must all agree before an action proceeds, such as a machine that should only start when a door is closed (I1), a part is loaded (I2), and an operator presses start (I3). Any single input going OFF immediately disables the output.",
+    "tag": "LD",
+    "source": "annotation",
+    "logojson": {
+      "description": "3-input AND gate: Q1 is ON only when I1 AND I2 AND I3 are all ON",
+      "blocks": [
+        {"id": "B1", "type": "AND", "inputs": ["I1", "I2", "I3"]},
+        {"id": "B2", "type": "OUTPUT", "input": "B1", "pin": "Q1"}
+      ]
+    }
+  },
+  {
+    "id": "anno_005",
+    "query": "Turn on Q1 if any one of three buttons I1, I2, or I3 is pressed",
+    "text": "A three-input OR gate allows any one of three push-buttons to activate output Q1. This is the correct pattern when you have multiple control stations and any one of them should be able to trigger the same action, such as three call buttons on different floors of a building all triggering the same alarm. Q1 stays ON as long as at least one input remains active.",
+    "tag": "LD",
+    "source": "annotation",
+    "logojson": {
+      "description": "3-input OR gate: Q1 is ON when any of I1, I2, or I3 is ON",
+      "blocks": [
+        {"id": "B1", "type": "OR", "inputs": ["I1", "I2", "I3"]},
+        {"id": "B2", "type": "OUTPUT", "input": "B1", "pin": "Q1"}
+      ]
+    }
+  },
+  {
+    "id": "anno_006",
+    "query": "Output should be OFF only when both inputs are ON, and ON in all other cases",
+    "text": "A NAND gate is the logical inverse of AND: Q1 is ON in all cases except when both I1 and I2 are ON at the same time. This is used when you want to inhibit an output only if two specific conditions occur simultaneously, while allowing the output to remain on in all other combinations. NAND is a fundamental building block and is sometimes used in interlocking circuits.",
+    "tag": "GATE",
+    "source": "annotation",
+    "logojson": {
+      "description": "NAND gate: Q1 is OFF only when both I1 AND I2 are ON",
+      "blocks": [
+        {"id": "B1", "type": "NAND", "inputs": ["I1", "I2"]},
+        {"id": "B2", "type": "OUTPUT", "input": "B1", "pin": "Q1"}
+      ]
+    }
+  },
+  {
+    "id": "anno_007",
+    "query": "Output Q1 should be ON only when both inputs I1 and I2 are OFF",
+    "text": "A NOR gate is the inverse of OR: Q1 is ON only when both I1 and I2 are OFF at the same time, and turns OFF the moment either input goes ON. This implements a none-of-the-above logic, useful for activating a standby or idle indicator that should only be lit when no monitored condition is present. Any active input immediately suppresses the output.",
+    "tag": "GATE",
+    "source": "annotation",
+    "logojson": {
+      "description": "NOR gate: Q1 is ON only when both I1 and I2 are OFF",
+      "blocks": [
+        {"id": "B1", "type": "NOR", "inputs": ["I1", "I2"]},
+        {"id": "B2", "type": "OUTPUT", "input": "B1", "pin": "Q1"}
+      ]
+    }
+  },
+  {
+    "id": "anno_008",
+    "query": "Output Q1 is ON when exactly one of I1 or I2 is active, but not when both are active",
+    "text": "An XOR gate outputs ON only when I1 and I2 are in different states: one ON and one OFF. It turns OFF when both inputs are the same, whether both ON or both OFF. This is useful for detecting a mismatch or disagreement between two sensors that should normally track each other, or for toggling an output each time a single button is pressed without using a latch.",
+    "tag": "GATE",
+    "source": "annotation",
+    "logojson": {
+      "description": "XOR gate: Q1 is ON when I1 and I2 are different states",
+      "blocks": [
+        {"id": "B1", "type": "XOR", "inputs": ["I1", "I2"]},
+        {"id": "B2", "type": "OUTPUT", "input": "B1", "pin": "Q1"}
+      ]
+    }
+  },
+  {
+    "id": "anno_009",
+    "query": "When button I1 is pressed, wait 5 seconds then turn on output Q1",
+    "text": "An ON_DELAY timer delays the activation of Q1 by 5 seconds after I1 goes ON. I1 must remain continuously ON for the full 5 seconds; if I1 turns OFF before the timer expires, the timer resets and Q1 never activates. This pattern is used to prevent brief spurious signals from triggering an output, and is common in motor start circuits that require a sustained command before starting.",
+    "tag": "LD",
+    "source": "annotation",
+    "logojson": {
+      "description": "ON_DELAY timer: Q1 turns ON 5 seconds after I1 goes ON",
+      "blocks": [
+        {"id": "B1", "type": "ON_DELAY", "input": "I1", "T": "5s"},
+        {"id": "B2", "type": "OUTPUT", "input": "B1", "pin": "Q1"}
+      ]
+    }
+  },
+  {
+    "id": "anno_010",
+    "query": "Turn on output Q1 immediately when I1 is pressed, and keep it on for 3 seconds after I1 is released",
+    "text": "An OFF_DELAY timer turns Q1 ON immediately when I1 goes ON, and then keeps Q1 ON for 3 seconds after I1 turns OFF before finally releasing the output. This is used when a device needs to keep running briefly after its trigger is removed, such as a cooling fan that should continue for a short time after a machine stops, or a warning light that remains visible slightly longer than the fault condition.",
+    "tag": "LD",
+    "source": "annotation",
+    "logojson": {
+      "description": "OFF_DELAY timer: Q1 turns ON with I1 and stays ON for 3 seconds after I1 turns OFF",
+      "blocks": [
+        {"id": "B1", "type": "OFF_DELAY", "input": "I1", "T": "3s"},
+        {"id": "B2", "type": "OUTPUT", "input": "B1", "pin": "Q1"}
+      ]
+    }
+  },
+  {
+    "id": "anno_011",
+    "query": "When input I1 turns on, wait 2 seconds before output turns on, and when I1 turns off, keep output on for 10 more seconds",
+    "text": "An ON_OFF_DELAY timer combines both delay behaviours: Q1 activates 2 seconds after I1 goes ON, and then stays ON for 10 seconds after I1 goes OFF. This smooths out rapid switching in both directions and is used where a device needs time to reach operating state before being considered active, and should continue running briefly after the trigger is removed, such as a heating element or ventilation system.",
+    "tag": "LD",
+    "source": "annotation",
+    "logojson": {
+      "description": "ON_OFF_DELAY: Q1 turns ON 2s after I1, and stays ON 10s after I1 turns OFF",
+      "blocks": [
+        {"id": "B1", "type": "ON_OFF_DELAY", "input": "I1", "T_on": "2s", "T_off": "10s"},
+        {"id": "B2", "type": "OUTPUT", "input": "B1", "pin": "Q1"}
+      ]
+    }
+  },
+  {
+    "id": "anno_012",
+    "query": "Accumulate the time that input I1 is active. When total ON time reaches 30 seconds, turn on Q1. Input I2 resets the timer.",
+    "text": "A retentive timer differs from a standard ON_DELAY because it remembers elapsed time across multiple ON periods: if I1 turns ON for 10 seconds, OFF, then ON again, the timer continues from 10 seconds rather than restarting. When the total accumulated ON time reaches 30 seconds, Q1 activates. This is ideal for maintenance scheduling, such as triggering a service alert after a machine has run for a total of 30 hours. I2 resets the accumulated time to zero.",
+    "tag": "LD",
+    "source": "annotation",
+    "logojson": {
+      "description": "Retentive timer: Q1 turns ON when total accumulated ON time of I1 reaches 30s. I2 resets.",
+      "blocks": [
+        {"id": "B1", "type": "RETENTIVE_TIMER", "input": "I1", "reset": "I2", "T": "30s"},
+        {"id": "B2", "type": "OUTPUT", "input": "B1", "pin": "Q1"}
+      ]
+    }
+  },
+  {
+    "id": "anno_013",
+    "query": "Count 10 pulses from input I1, then turn on output Q1. Input I2 resets the counter.",
+    "text": "An UP_COUNTER increments its internal count by one each time input I1 transitions from OFF to ON (a rising edge). When the count reaches 10, the output Q1 activates and stays ON until the counter is reset. This is the standard pattern for batch counting, such as counting 10 products passing a conveyor sensor before signalling that a batch is complete. Pressing I2 resets the counter to zero so the next batch can begin.",
+    "tag": "LD",
+    "source": "annotation",
+    "logojson": {
+      "description": "UP_COUNTER: Q1 turns ON when 10 rising edges have been counted on I1. I2 resets.",
+      "blocks": [
+        {"id": "B1", "type": "UP_COUNTER", "input": "I1", "reset": "I2", "count": 10},
+        {"id": "B2", "type": "OUTPUT", "input": "B1", "pin": "Q1"}
+      ]
+    }
+  },
+  {
+    "id": "anno_014",
+    "query": "Start counting down from 5. Each pulse on I1 decrements the counter. When it reaches zero, turn on Q1. I2 reloads the counter.",
+    "text": "A DOWN_COUNTER loads a preset value of 5 and decrements by one each time I1 receives a rising edge pulse. When the count reaches zero, Q1 activates to signal that the count is complete. This pattern is used in dispensing or dosing applications where a fixed quantity must be delivered, such as opening a valve for exactly 5 pulses. I2 reloads the counter back to 5 to begin the next cycle.",
+    "tag": "LD",
+    "source": "annotation",
+    "logojson": {
+      "description": "DOWN_COUNTER: Q1 turns ON when counter reaches zero after counting down from 5 on I1. I2 reloads.",
+      "blocks": [
+        {"id": "B1", "type": "DOWN_COUNTER", "input": "I1", "reset": "I2", "count": 5},
+        {"id": "B2", "type": "OUTPUT", "input": "B1", "pin": "Q1"}
+      ]
+    }
+  },
+  {
+    "id": "anno_015",
+    "query": "Press button I1 to turn on output Q1 and keep it on. Press button I2 to turn it off.",
+    "text": "A LATCH block (also called an SR flip-flop) remembers its last commanded state even after the input is removed. Pressing I1 once sets Q1 ON and it stays ON without needing I1 to be held down. Pressing I2 resets Q1 OFF. This is the fundamental start-stop motor control pattern and is also used for any application where a single momentary button press should produce a sustained output change.",
+    "tag": "LD",
+    "source": "annotation",
+    "logojson": {
+      "description": "LATCH (SR flip-flop): I1 sets Q1 ON and it stays ON. I2 resets Q1 OFF.",
+      "blocks": [
+        {"id": "B1", "type": "LATCH", "set": "I1", "reset": "I2"},
+        {"id": "B2", "type": "OUTPUT", "input": "B1", "pin": "Q1"}
+      ]
+    }
+  },
+  {
+    "id": "anno_016",
+    "query": "When input I1 is triggered, generate a 2-second ON pulse at output Q1",
+    "text": "A PULSE relay generates a fixed-duration ON pulse at Q1 each time I1 is triggered, regardless of how long I1 stays ON. The pulse lasts exactly 2 seconds and then Q1 turns OFF automatically. This is used to send a precisely timed command to another device, such as briefly energising a solenoid valve for exactly 2 seconds, or producing a metered dose without relying on the operator to release the button at the right moment.",
+    "tag": "LD",
+    "source": "annotation",
+    "logojson": {
+      "description": "PULSE relay: each trigger on I1 produces a 2-second ON pulse at Q1",
+      "blocks": [
+        {"id": "B1", "type": "PULSE", "input": "I1", "T": "2s"},
+        {"id": "B2", "type": "OUTPUT", "input": "B1", "pin": "Q1"}
+      ]
+    }
+  },
+  {
+    "id": "anno_017",
+    "query": "Detect the moment input I1 switches from OFF to ON and send a single brief pulse to output Q1",
+    "text": "A RISING_EDGE detector produces a single scan-cycle pulse at Q1 only at the instant I1 transitions from OFF to ON, not while I1 remains ON. This distinguishes an event (the moment the button is pressed) from a condition (the button being held down), and is important when you need to trigger a one-shot action such as incrementing a counter or starting a timer without the sustained state causing repeated triggers.",
+    "tag": "GATE",
+    "source": "annotation",
+    "logojson": {
+      "description": "RISING_EDGE detector: Q1 produces one scan-cycle pulse when I1 transitions OFF to ON",
+      "blocks": [
+        {"id": "B1", "type": "RISING_EDGE", "input": "I1"},
+        {"id": "B2", "type": "OUTPUT", "input": "B1", "pin": "Q1"}
+      ]
+    }
+  },
+  {
+    "id": "anno_018",
+    "query": "Detect the moment input I1 switches from ON to OFF and send a single brief pulse to output Q1",
+    "text": "A FALLING_EDGE detector produces a single scan-cycle pulse at Q1 only at the instant I1 transitions from ON to OFF, not while I1 is already OFF. This is used to react to the release of a button rather than its press, or to detect when a sensor stops detecting a target. It is commonly used to trigger an action at the end of a movement or process rather than at the beginning.",
+    "tag": "GATE",
+    "source": "annotation",
+    "logojson": {
+      "description": "FALLING_EDGE detector: Q1 produces one scan-cycle pulse when I1 transitions ON to OFF",
+      "blocks": [
+        {"id": "B1", "type": "FALLING_EDGE", "input": "I1"},
+        {"id": "B2", "type": "OUTPUT", "input": "B1", "pin": "Q1"}
+      ]
+    }
+  },
+  {
+    "id": "anno_019",
+    "query": "Turn on output Q1 when the value at input I1 is greater than 50",
+    "text": "A COMPARATOR block continuously compares the value at input I1 against a fixed threshold of 50 and turns Q1 ON whenever the value exceeds that threshold. This is the standard block for analog threshold control in LOGO! 8, covering applications such as temperature control, pressure monitoring, and level detection. Q1 turns OFF again when the input value falls back to or below the threshold.",
+    "tag": "GATE",
+    "source": "annotation",
+    "logojson": {
+      "description": "COMPARATOR: Q1 is ON when I1 value exceeds threshold of 50",
+      "blocks": [
+        {"id": "B1", "type": "COMPARATOR", "input": "I1", "threshold": 50, "operator": ">"},
+        {"id": "B2", "type": "OUTPUT", "input": "B1", "pin": "Q1"}
+      ]
+    }
+  },
+  {
+    "id": "anno_020",
+    "query": "Both I1 and I2 must be pressed at the same time for 5 seconds before output Q1 turns on — safety interlock",
+    "text": "An AND gate feeds into an ON_DELAY so that Q1 only activates after both I1 and I2 have been simultaneously ON for a continuous 5 seconds. If either input is released before the timer expires, the timer resets to zero and Q1 does not activate. This safety interlock pattern prevents accidental activation from a brief simultaneous press and is a common requirement in machine guarding and two-hand control circuits.",
+    "tag": "LD",
+    "source": "annotation",
+    "logojson": {
+      "description": "Safety interlock: AND gate feeds ON_DELAY. Both inputs must stay ON together for 5s to activate Q1.",
+      "blocks": [
+        {"id": "B1", "type": "AND", "inputs": ["I1", "I2"]},
+        {"id": "B2", "type": "ON_DELAY", "input": "B1", "T": "5s"},
+        {"id": "B3", "type": "OUTPUT", "input": "B2", "pin": "Q1"}
+      ]
+    }
+  },
+  {
+    "id": "anno_021",
+    "query": "Pressing either button I1 or button I2 latches output Q1 on. Button I3 releases it.",
+    "text": "An OR gate feeds the set input of a LATCH so that pressing either I1 or I2 latches Q1 ON and keeps it ON even after both buttons are released. A dedicated reset button I3 turns Q1 OFF again. This pattern is used in alarm and notification systems where multiple sensors can trigger an alert that must then be manually acknowledged and cleared, regardless of which sensor originally triggered it.",
+    "tag": "LD",
+    "source": "annotation",
+    "logojson": {
+      "description": "OR feeds LATCH: any of two buttons sets Q1 ON. I3 resets it.",
+      "blocks": [
+        {"id": "B1", "type": "OR", "inputs": ["I1", "I2"]},
+        {"id": "B2", "type": "LATCH", "set": "B1", "reset": "I3"},
+        {"id": "B3", "type": "OUTPUT", "input": "B2", "pin": "Q1"}
+      ]
+    }
+  },
+  {
+    "id": "anno_022",
+    "query": "Output Q1 should be ON only when input I2 is active and input I1 is NOT active at the same time",
+    "text": "This inhibit circuit uses a NOT gate to invert I1, then combines it with I2 using AND, so Q1 is ON only when I2 is ON and I1 is simultaneously OFF. The moment I1 goes ON it suppresses Q1 regardless of I2. This pattern is used when a priority or override signal (I1) should block normal operation (I2), such as a safety stop that disables a run command.",
+    "tag": "LD",
+    "source": "annotation",
+    "logojson": {
+      "description": "Inhibit circuit: NOT I1 combined with I2 using AND. Q1 on only when I2 on and I1 off.",
+      "blocks": [
+        {"id": "B1", "type": "NOT", "input": "I1"},
+        {"id": "B2", "type": "AND", "inputs": ["B1", "I2"]},
+        {"id": "B3", "type": "OUTPUT", "input": "B2", "pin": "Q1"}
+      ]
+    }
+  },
+  {
+    "id": "anno_023",
+    "query": "Stairway lighting: pressing button I1 turns on light Q1 for 3 minutes, then it turns off automatically",
+    "text": "A RISING_EDGE detector fires a single pulse each time the push-button I1 is pressed, and that pulse triggers a PULSE relay which keeps Q1 ON for exactly 3 minutes before turning it off automatically. Using a rising edge ensures that holding the button does not extend the timer, and each fresh button press restarts the 3-minute countdown. This is the standard LOGO! stairway lighting pattern described in the official manual.",
+    "tag": "LD",
+    "source": "annotation",
+    "logojson": {
+      "description": "Stairway light: rising edge on I1 triggers a 3-minute pulse at Q1.",
+      "blocks": [
+        {"id": "B1", "type": "RISING_EDGE", "input": "I1"},
+        {"id": "B2", "type": "PULSE", "input": "B1", "T": "3m"},
+        {"id": "B3", "type": "OUTPUT", "input": "B2", "pin": "Q1"}
+      ]
+    }
+  },
+  {
+    "id": "anno_024",
+    "query": "Motor start-stop: press I1 to start the motor (Q1 ON), press I2 to stop. Show motor stopped status on Q2.",
+    "text": "A LATCH block implements start-stop control: pressing I1 sets Q1 ON (motor running) and it stays ON until I2 is pressed to reset it. A NOT gate on the LATCH output drives Q2, ensuring Q2 is always the opposite of Q1, so Q2 functions as a stopped indicator that is ON when the motor is OFF. This provides clear visual feedback on the control panel about the motor's current state.",
+    "tag": "LD",
+    "source": "annotation",
+    "logojson": {
+      "description": "Motor start-stop with status: LATCH drives Q1 (running). NOT of LATCH drives Q2 (stopped indicator).",
+      "blocks": [
+        {"id": "B1", "type": "LATCH", "set": "I1", "reset": "I2"},
+        {"id": "B2", "type": "OUTPUT", "input": "B1", "pin": "Q1"},
+        {"id": "B3", "type": "NOT", "input": "B1"},
+        {"id": "B4", "type": "OUTPUT", "input": "B3", "pin": "Q2"}
+      ]
+    }
+  },
+  {
+    "id": "anno_025",
+    "query": "Alarm circuit: if both fault conditions I1 and I2 are present for more than 10 seconds, latch the alarm output Q1. Press I3 to acknowledge and clear the alarm.",
+    "text": "An AND gate requires both fault conditions to be active, an ON_DELAY of 10 seconds filters out transient faults that clear quickly, and a LATCH keeps the alarm Q1 active even after the faults clear so the event is not missed. This four-block chain — AND, ON_DELAY, LATCH, OUTPUT — is the standard nuisance-free latching alarm pattern in industrial control. Pressing I3 acknowledges and resets the alarm, but it will re-latch if the faults return.",
+    "tag": "LD",
+    "source": "annotation",
+    "logojson": {
+      "description": "Latching alarm: AND of two faults feeds ON_DELAY 10s then latches Q1. I3 resets alarm.",
+      "blocks": [
+        {"id": "B1", "type": "AND", "inputs": ["I1", "I2"]},
+        {"id": "B2", "type": "ON_DELAY", "input": "B1", "T": "10s"},
+        {"id": "B3", "type": "LATCH", "set": "B2", "reset": "I3"},
+        {"id": "B4", "type": "OUTPUT", "input": "B3", "pin": "Q1"}
+      ]
+    }
+  },
+  {
+    "id": "anno_026",
+    "query": "Count 5 items passing a sensor at I1. When 5 items are counted, turn on packing signal Q1. Button I2 resets the counter for the next batch.",
+    "text": "An UP_COUNTER increments once for each item detected by the sensor at I1. When the count reaches 5, Q1 activates to signal that the batch is complete and ready for packing. Pressing I2 resets the counter to zero so the next batch can begin. This is a very common production line pattern where a downstream process (packing) should only begin after a precise number of units have been produced upstream.",
+    "tag": "LD",
+    "source": "annotation",
+    "logojson": {
+      "description": "Batch counter: UP_COUNTER counts 5 sensor pulses on I1 then activates packing signal Q1. I2 resets.",
+      "blocks": [
+        {"id": "B1", "type": "UP_COUNTER", "input": "I1", "reset": "I2", "count": 5},
+        {"id": "B2", "type": "OUTPUT", "input": "B1", "pin": "Q1"}
+      ]
+    }
+  },
+  {
+    "id": "anno_027",
+    "query": "Turn on a ventilation fan at Q1 when the temperature reading at I1 exceeds 70 degrees",
+    "text": "A COMPARATOR block monitors the analog value at I1 and turns on the ventilation fan at Q1 whenever the measured temperature exceeds the threshold of 70 degrees. This is a simple on-off temperature control strategy without PID: the fan runs whenever the temperature is above the limit and turns off when it falls back below. The threshold and operator can be adjusted to suit different temperature ranges and sensor types.",
+    "tag": "GATE",
+    "source": "annotation",
+    "logojson": {
+      "description": "Temperature threshold: COMPARATOR triggers Q1 (fan) when I1 analog value exceeds 70.",
+      "blocks": [
+        {"id": "B1", "type": "COMPARATOR", "input": "I1", "threshold": 70, "operator": ">"},
+        {"id": "B2", "type": "OUTPUT", "input": "B1", "pin": "Q1"}
+      ]
+    }
+  },
+  {
+    "id": "anno_028",
+    "query": "Turn on output Q1 when input I1 has been continuously ON for 1 hour",
+    "text": "A long ON_DELAY timer set to 1 hour ensures Q1 only activates if I1 stays continuously ON for a full hour without interruption. If I1 goes OFF at any point before the hour is up, the timer resets and the countdown restarts from zero. This pattern is used for monitoring persistent conditions that should only trigger a response if they have been present for an extended period, such as an overload or pressure condition that would be acceptable briefly but not for a long time.",
+    "tag": "LD",
+    "source": "annotation",
+    "logojson": {
+      "description": "Long ON_DELAY: Q1 turns ON only after I1 has been continuously ON for 1 hour.",
+      "blocks": [
+        {"id": "B1", "type": "ON_DELAY", "input": "I1", "T": "1h"},
+        {"id": "B2", "type": "OUTPUT", "input": "B1", "pin": "Q1"}
+      ]
+    }
+  },
+  {
+    "id": "anno_029",
+    "query": "Generate a short 500ms pulse on Q1 every time the rising edge of input I1 is detected",
+    "text": "A RISING_EDGE detector captures the instant I1 goes from OFF to ON, and feeds that brief trigger into a PULSE relay which produces a precise 500ms output at Q1. This combination ensures Q1 never stays ON accidentally if I1 is held down, and that each press of I1 produces exactly one 500ms pulse regardless of how long the button is held. It is used for generating metered command signals or brief indicator flashes from a toggle-style input.",
+    "tag": "GATE",
+    "source": "annotation",
+    "logojson": {
+      "description": "Edge-triggered pulse: rising edge of I1 fires a 500ms pulse at Q1.",
+      "blocks": [
+        {"id": "B1", "type": "RISING_EDGE", "input": "I1"},
+        {"id": "B2", "type": "PULSE", "input": "B1", "T": "500ms"},
+        {"id": "B3", "type": "OUTPUT", "input": "B2", "pin": "Q1"}
+      ]
+    }
+  },
+  {
+    "id": "anno_030",
+    "query": "Two conveyor belts: I1 is belt A running, I2 is belt B running. Turn on warning light Q1 if belt A is running but belt B is not.",
+    "text": "A NOT gate inverts the belt B signal so that the AND gate sees I1 (belt A running) and NOT I2 (belt B stopped). Q1 activates only in this unsafe mismatch condition: belt A feeding into a stopped belt B. This prevents material from piling up at the junction and is a standard conveyor sequencing interlock. If both belts run together, or both are stopped, Q1 stays OFF because the condition is safe.",
+    "tag": "LD",
+    "source": "annotation",
+    "logojson": {
+      "description": "Conveyor mismatch warning: I1 AND NOT I2 drives warning Q1 (belt A running, belt B stopped).",
+      "blocks": [
+        {"id": "B1", "type": "NOT", "input": "I2"},
+        {"id": "B2", "type": "AND", "inputs": ["I1", "B1"]},
+        {"id": "B3", "type": "OUTPUT", "input": "B2", "pin": "Q1"}
+      ]
+    }
+  }
+]
