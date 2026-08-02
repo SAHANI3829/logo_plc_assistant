@@ -62,6 +62,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 from classify import classify
 from retrieve import retrieve
+from validate import validate
 
 
 # ── Configuration ──────────────────────────────────────────────────────────────
@@ -75,18 +76,6 @@ SPEC_N_RESULTS  = 3   # number of chunks fed to the spec LLM prompt
 LOGIC_N_RESULTS = 2   # number of example circuits fed to the logic LLM prompt
 
 MAX_LOGIC_RETRIES = 2   # how many times to retry if the LLM returns bad JSON
-
-# The 18 allowed block types in LOGO!JSON (closed vocabulary).
-# validate.py will enforce these fully; we do a basic check here.
-ALLOWED_BLOCK_TYPES = {
-    "AND", "OR", "NOT", "NAND", "NOR", "XOR",
-    "ON_DELAY", "OFF_DELAY", "ON_OFF_DELAY", "RETENTIVE_TIMER",
-    "UP_COUNTER", "DOWN_COUNTER",
-    "LATCH", "PULSE",
-    "RISING_EDGE", "FALLING_EDGE",
-    "COMPARATOR",
-    "OUTPUT",
-}
 
 
 # ── System prompts ─────────────────────────────────────────────────────────────
@@ -315,45 +304,6 @@ def _parse_logojson(raw_text: str):
         return None, f"JSON parse error: {e}"
 
 
-def _basic_validate(logojson: dict):
-    """
-    Check that the LOGO!JSON has the minimum required structure.
-
-    This is a lightweight sanity check. The full 10-rule validation
-    will be implemented in validate.py (Step 7 of the build plan).
-
-    Returns:
-        (True, None)          if the structure looks correct
-        (False, error_message) if a critical rule is violated
-    """
-    # Must be a dict with a "blocks" key
-    if not isinstance(logojson, dict):
-        return False, "Top-level structure must be a JSON object, not a list or string."
-
-    if "blocks" not in logojson:
-        return False, "Missing required key: 'blocks'."
-
-    blocks = logojson["blocks"]
-    if not isinstance(blocks, list) or len(blocks) == 0:
-        return False, "'blocks' must be a non-empty list."
-
-    # Every block type must be from the allowed vocabulary
-    for block in blocks:
-        btype = block.get("type", "")
-        if btype not in ALLOWED_BLOCK_TYPES:
-            return False, (
-                f"Unknown block type: '{btype}'. "
-                f"Allowed types: {', '.join(sorted(ALLOWED_BLOCK_TYPES))}."
-            )
-
-    # At least one OUTPUT block must exist
-    output_blocks = [b for b in blocks if b.get("type") == "OUTPUT"]
-    if not output_blocks:
-        return False, "Circuit must contain at least one OUTPUT block."
-
-    return True, None
-
-
 # ── Main entry point ──────────────────────────────────────────────────────────
 
 def run(query: str) -> dict:
@@ -449,14 +399,14 @@ def run(query: str) -> dict:
                     error = f"Could not parse valid JSON after {MAX_LOGIC_RETRIES} attempts. Last error: {parse_error}"
                 continue
 
-            # Check basic structure
-            valid, validation_error = _basic_validate(logojson)
+            # Check full 10-rule structure (validate.py)
+            valid, validation_errors = validate(logojson)
             if not valid:
                 retries    += 1
-                error_hint  = validation_error
+                error_hint  = "\n".join(f"- {e}" for e in validation_errors)
                 logojson    = None
                 if attempt == MAX_LOGIC_RETRIES:
-                    error = f"LOGO!JSON failed validation after {MAX_LOGIC_RETRIES} attempts. Last error: {validation_error}"
+                    error = f"LOGO!JSON failed validation after {MAX_LOGIC_RETRIES} attempts. Last errors:\n{error_hint}"
                 continue
 
             # All checks passed — break out of the retry loop
