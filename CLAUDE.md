@@ -184,7 +184,7 @@ Page 382: SPEC         (order numbers)
 C:\logo_plc_assistant\
 ├── .env                        ← OpenAI API key (NEVER share or commit)
 ├── CLAUDE.md                   ← this file
-├── app.py                      ← Streamlit UI (not built yet)
+├── app.py                      ← ✅ DONE — Streamlit chat UI
 ├── requirements.txt            ← pip freeze output
 ├── data/
 │   ├── raw/
@@ -203,18 +203,18 @@ C:\logo_plc_assistant\
     ├── clean.py                ← ✅ DONE — text cleaning + tagging
     ├── chunk.py                ← ✅ DONE — sentence boundary chunking
     ├── embed.py                ← ✅ DONE — embedding + ChromaDB build (3 sources)
-    ├── classify.py             ← NEXT — intent classifier
-    ├── retrieve.py             ← TODO — ChromaDB retrieval
-    ├── pipeline.py             ← TODO — main RAG router
-    ├── validate.py             ← TODO — LOGO!JSON validator
-    └── render.py               ← TODO — SVG renderer
+    ├── classify.py             ← ✅ DONE — intent classifier
+    ├── retrieve.py             ← ✅ DONE — ChromaDB retrieval
+    ├── pipeline.py             ← ✅ DONE — main RAG router
+    ├── validate.py             ← ✅ DONE — LOGO!JSON 10-rule validator
+    └── render.py               ← ✅ DONE — Ladder/FBD SVG + ST renderer
 ```
 
 ---
 
 ## What Is Done vs What Is Next
 
-### ✅ COMPLETED
+### ✅ COMPLETED — full 9-step build finished
 - Python environment setup (venv, all libraries installed)
 - Project folder structure created
 - LOGO! 8 manual PDF copied to data/raw/
@@ -228,14 +228,16 @@ C:\logo_plc_assistant\
 - Complete methodology designed and documented
 - Evaluation framework designed (3 conditions, 30 queries)
 - Project checklist spreadsheet with real deadlines created
+- src/classify.py — intent classifier (spec vs logic), keyword rules + LLM fallback for ambiguous queries
+- src/retrieve.py — ChromaDB retrieval with tag/type filtering
+- **Step 6** — src/pipeline.py — main RAG router (classify + retrieve + GPT-4o-mini), both paths tested end-to-end with real API calls
+- **Step 7** — src/validate.py — full 10-rule LOGO!JSON validator, wired into pipeline.py's retry loop
+- **Step 8** — src/render.py — render_ladder_svg / render_fbd_svg / json_to_st, all verified (well-formed SVG XML, correct IEC 61131-3 ST)
+- **Step 9** — app.py — Streamlit chat UI, verified via AppTest + a live server smoke test (spec path with sources expander, logic path with Ladder/FBD/ST radio selector, chat history persists)
 
-### 🔄 IMMEDIATE NEXT STEPS (do these in order)
-1. Write src/classify.py — intent classifier (spec vs logic)
-2. Write src/retrieve.py — ChromaDB retrieval with tag filtering
-3. Write src/pipeline.py — main RAG router (ties classify + retrieve + LLM together)
-4. Write src/validate.py — LOGO!JSON rule validator (10 rules)
-5. Write src/render.py — SVG renderer for LD, FBD, ST output
-6. Write app.py — Streamlit UI
+The RAG assistant is functionally complete end to end: ask a spec question
+or request a circuit, get a grounded answer or a validated LOGO!JSON circuit
+rendered as Ladder/FBD/ST, in the browser.
 
 ### 📅 LATER (Weeks 2-3)
 - Add 34 example LOGO! PLC programs to corpus
@@ -334,11 +336,15 @@ for Multi-Paradigm PLC Programming Assistance"
 
 ## Current Progress Summary
 
-**Week 1 is nearly complete.**
-- Environment fully set up ✅
-- Manual extracted and cleaned ✅
-- 379 chunks ready with tags ✅
-- Next: chunking script then annotations then embedding
+**The full 9-step build is complete.** Knowledge base built (403 items in
+ChromaDB), and the entire pipeline — classify → retrieve → pipeline →
+validate → render → app — is implemented and verified end to end, including
+real GPT-4o-mini API calls and a live Streamlit UI smoke test.
+
+Next up is Weeks 2-3: adding the 34 example LOGO! PLC programs to the
+corpus (same extract → clean → chunk → tag → embed flow, tagged
+type="example"), then moving into the evaluation phase (30 test queries
+across the 3 conditions described above).
 
 The student understands the full system architecture and has been
 involved in every design decision. She is engaged and motivated.

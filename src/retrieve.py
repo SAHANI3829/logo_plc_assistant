@@ -143,12 +143,14 @@ def retrieve(
         score = round(1.0 - dist, 4)
 
         results.append({
-            "text":   doc,
-            "tag":    meta.get("tag",    ""),
-            "source": meta.get("source", ""),
-            "page":   meta.get("page"),          # int for manual; absent for annotations
-            "type":   meta.get("type",   ""),
-            "score":  score,
+            "text":     doc,
+            "tag":      meta.get("tag",     ""),
+            "source":   meta.get("source",  ""),
+            "page":     meta.get("page"),           # int for manual; absent for annotations
+            "type":     meta.get("type",    ""),
+            "score":    score,
+            "query":    meta.get("query",   ""),    # original query text for annotations
+            "logojson": meta.get("logojson"),       # JSON string for annotation items; None for manual
         })
 
     return results
