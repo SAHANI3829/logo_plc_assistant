@@ -120,6 +120,9 @@ STRICT RULES — follow every one or the circuit will be rejected:
   8. Gate blocks (AND, OR etc.) take "inputs" (a list of strings).
   9. NOT, LATCH, RISING_EDGE, FALLING_EDGE take a single "input" (string).
  10. OUTPUT takes a single "input" (string) and a "pin" (e.g. "Q1").
+ 11. An OUTPUT block must reference a logic/function block as its input — never
+     another OUTPUT block. Each OUTPUT block should be driven by its own
+     dedicated logic chain.
 
 OUTPUT FORMAT:
   Return ONLY the raw JSON object. No markdown. No code fences. No explanation.

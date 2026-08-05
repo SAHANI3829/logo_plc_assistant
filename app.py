@@ -13,6 +13,12 @@ Run with:
 """
 
 import os
+
+# Must be set before any HuggingFace/tokenizers import happens (pipeline.py ->
+# retrieve.py -> sentence-transformers) to silence the fork-related tokenizer
+# warning that was flooding the terminal and burying real debug output.
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
 import re
 import sys
 

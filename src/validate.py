@@ -1,7 +1,8 @@
 """
 validate.py  —  LOGO!JSON structural validator for the LOGO! PLC RAG assistant.
 
-Enforces the 10 rules from CLAUDE.md's closed-vocabulary LOGO!JSON format.
+Enforces the 10 rules from CLAUDE.md's closed-vocabulary LOGO!JSON format,
+plus Rule 11: an OUTPUT block may not take another OUTPUT block as its input.
 Every rule is checked (not just the first failure) so a single call tells
 you everything wrong with a circuit — useful both for debugging by hand and
 for feeding a rich error_hint back to the LLM in pipeline.py's retry loop.
@@ -104,7 +105,7 @@ def _check_ref(value, block_id, field_name, all_ids, defined_ids, errors):
 
 def validate(logojson) -> tuple:
     """
-    Run all 10 structural rules against a LOGO!JSON object.
+    Run all 11 structural rules against a LOGO!JSON object.
 
     Parameters
     ----------
@@ -129,6 +130,7 @@ def validate(logojson) -> tuple:
 
     # ── Rule 3: sequential block IDs (B1, B2, B3 ...) ─────────────────────────
     all_ids = set()
+    id_to_block = {}
     for i, block in enumerate(blocks, start=1):
         expected_id = f"B{i}"
         actual_id = block.get("id")
@@ -138,6 +140,7 @@ def validate(logojson) -> tuple:
                 f"— block ids must be sequential starting at B1."
             )
         all_ids.add(actual_id)
+        id_to_block[actual_id] = block
 
     # Vocabulary check (not one of the 10 numbered rules, but required before
     # we can apply any per-type field checks below).
@@ -279,6 +282,15 @@ def validate(logojson) -> tuple:
             else:
                 _check_ref(ref, block_id, "input", all_ids, defined_ids, errors)
 
+                # Rule 11: an OUTPUT block cannot take another OUTPUT block as its input.
+                ref_block = id_to_block.get(ref)
+                if ref_block is not None and ref_block.get("type") == "OUTPUT":
+                    errors.append(
+                        f"Rule 11: OUTPUT block {block_id} references another OUTPUT block "
+                        f"'{ref}' as its input — each OUTPUT must be driven by its own "
+                        f"dedicated logic/function block chain, not another OUTPUT block."
+                    )
+
             pin = block.get("pin")
             if pin not in OUTPUT_PINS:
                 errors.append(
@@ -341,10 +353,23 @@ if __name__ == "__main__":
         ],
     }
 
+    # ── Case 4: OUTPUT referencing another OUTPUT — B5's input is B3, an OUTPUT ──
+    output_to_output_circuit = {
+        "description": "Broken: 3 outputs, but B5 references B3 (itself an OUTPUT) as its input",
+        "blocks": [
+            {"id": "B1", "type": "LATCH", "set": "I1", "reset": "I3"},
+            {"id": "B2", "type": "UP_COUNTER", "input": "I2", "reset": "I3", "count": 5},
+            {"id": "B3", "type": "OUTPUT", "input": "B1", "pin": "Q1"},
+            {"id": "B4", "type": "OUTPUT", "input": "B2", "pin": "Q2"},
+            {"id": "B5", "type": "OUTPUT", "input": "B3", "pin": "Q3"},
+        ],
+    }
+
     cases = [
         ("Case 1 — valid circuit (should PASS)", valid_circuit),
         ("Case 2 — forward reference (Rule 6)", forward_ref_circuit),
         ("Case 3 — wrong pin names (Rules 1 & 2)", wrong_pins_circuit),
+        ("Case 4 — OUTPUT references another OUTPUT (Rule 11)", output_to_output_circuit),
     ]
 
     for label, circuit in cases:
