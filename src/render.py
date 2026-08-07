@@ -106,43 +106,108 @@ def _ladder_line2(block: dict) -> str:
 
 # ── Ladder diagram ─────────────────────────────────────────────────────────────
 
-def _rung_chain(out_block: dict, blocks_by_id: dict, block_index: dict) -> list:
+def _fan_out_counts(blocks: list, blocks_by_id: dict) -> dict:
+    """How many other blocks read each block's value, by id."""
+    counts = {}
+    for block in blocks:
+        for _role, value in _primary_inputs(block):
+            if value in blocks_by_id:
+                counts[value] = counts.get(value, 0) + 1
+    return counts
+
+
+def _rung_chain(out_block: dict, blocks_by_id: dict, block_index: dict, shared_ids: set) -> tuple:
     """
     Walk backward from an OUTPUT block's input to find every block that feeds
-    it. Stops at physical pins (nothing to draw — they're inline labels).
+    it. Stops at physical pins (nothing to draw — they're inline labels), at
+    any other OUTPUT block (Rule 11 violation that slipped past validation —
+    flagged as a warning instead of expanded), and at any *shared* block
+    (fed to more than one other block) — shared blocks are drawn once,
+    separately, with a branch wire into each rung that uses them, rather than
+    being duplicated in every rung.
 
-    Rule 11 (validate.py) forbids an OUTPUT block from taking another OUTPUT
-    block as its input, but this renderer must still cope if an invalid
-    circuit slips through validation: if the backward trace hits another
-    OUTPUT block, tracing stops there and that entry is flagged as
-    ("warning", id) instead of being drawn as a normal block.
-
-    Returns a list of ("block", id) / ("warning", id) tuples in left-to-right
-    rung order, ending with ("block", out_block's own id). Because LOGO!JSON
-    forbids forward references, sorting collected ancestors by their original
-    position in the blocks list is already a valid left-to-right dependency
-    order.
+    Returns (chain, shared_entries):
+        chain          -> [("block"|"warning", id), ...] ending with the
+                          OUTPUT's own id; never contains a shared block.
+        shared_entries -> [(shared_block_id, consumer_id), ...] so the caller
+                          can draw a branch wire from the shared block to
+                          whichever block (or the OUTPUT itself) reads it
+                          within this rung.
     """
     visited  = set()
     warnings = set()
-    stack = [out_block.get("input")]
+    shared_entries = []
+    stack = [(out_block.get("input"), out_block["id"])]
     while stack:
-        ref = stack.pop()
-        if ref not in blocks_by_id or ref in visited:
+        ref, consumer = stack.pop()
+        if ref not in blocks_by_id:
             continue
-        visited.add(ref)
         block = blocks_by_id[ref]
+
         if block.get("type") == "OUTPUT":
+            visited.add(ref)
             warnings.add(ref)
             continue
+
+        if ref in shared_ids:
+            shared_entries.append((ref, consumer))
+            continue
+
+        if ref in visited:
+            continue
+        visited.add(ref)
         for _role, value in _primary_inputs(block):
             if value in blocks_by_id:
-                stack.append(value)
+                stack.append((value, ref))
 
     ancestors = sorted(visited, key=lambda bid: block_index[bid])
     chain = [("warning" if bid in warnings else "block", bid) for bid in ancestors]
     chain.append(("block", out_block["id"]))
-    return chain
+    return chain, shared_entries
+
+
+def _draw_ladder_box(parts: list, bx, box_y, block_w: int, block_id: str,
+                      block: dict = None, warning: bool = False) -> None:
+    """Draw one ladder box (normal or a dashed 'INVALID' warning box) plus its 3 labels."""
+    half = block_w / 2
+    if warning:
+        parts.append(
+            f'<rect x="{bx}" y="{box_y}" width="{block_w}" height="40" rx="4" ry="4" '
+            f'fill="{_WARNING_STYLE["fill"]}" stroke="{_WARNING_STYLE["stroke"]}" '
+            f'stroke-width="1.5" stroke-dasharray="4,3"/>'
+        )
+        parts.append(
+            f'<text x="{bx + half}" y="{box_y - 8}" font-size="9" fill="{ID_LABEL_COLOR}" '
+            f'text-anchor="middle">{_esc(block_id)}</text>'
+        )
+        parts.append(
+            f'<text x="{bx + half}" y="{box_y + 17}" font-size="11" font-weight="bold" '
+            f'fill="{_WARNING_STYLE["text"]}" text-anchor="middle">INVALID</text>'
+        )
+        parts.append(
+            f'<text x="{bx + half}" y="{box_y + 31}" font-size="9" fill="{_WARNING_STYLE["text"]}" '
+            f'text-anchor="middle">{_esc(block_id)} is OUTPUT</text>'
+        )
+        return
+
+    btype = block.get("type", "")
+    style = _TYPE_STYLE.get(btype, _PURPLE_STYLE)
+    parts.append(
+        f'<rect x="{bx}" y="{box_y}" width="{block_w}" height="40" rx="4" ry="4" '
+        f'fill="{style["fill"]}" stroke="{style["stroke"]}" stroke-width="1.5"/>'
+    )
+    parts.append(
+        f'<text x="{bx + half}" y="{box_y - 8}" font-size="9" fill="{ID_LABEL_COLOR}" '
+        f'text-anchor="middle">{_esc(block_id)}</text>'
+    )
+    parts.append(
+        f'<text x="{bx + half}" y="{box_y + 17}" font-size="11" font-weight="bold" '
+        f'fill="{style["text"]}" text-anchor="middle">{_esc(btype)}</text>'
+    )
+    parts.append(
+        f'<text x="{bx + half}" y="{box_y + 31}" font-size="9" fill="{style["text"]}" '
+        f'text-anchor="middle">{_esc(_ladder_line2(block))}</text>'
+    )
 
 
 def render_ladder_svg(logojson: dict) -> str:
@@ -151,6 +216,11 @@ def render_ladder_svg(logojson: dict) -> str:
     OUTPUT block, each showing (left to right) the chain of blocks feeding
     that output, traced backward through the block references. All rungs
     share one continuous pair of left/right power rails.
+
+    A block referenced by more than one other block (e.g. a LATCH feeding
+    two separate OUTPUTs) is drawn exactly once, in its own column on the
+    left, with a branch wire running from it to every rung that reads it —
+    instead of being duplicated inside each of those rungs.
     """
     blocks = logojson.get("blocks", [])
     if not blocks:
@@ -162,24 +232,36 @@ def render_ladder_svg(logojson: dict) -> str:
     if not outputs:
         return _empty_svg(300, 100, "No OUTPUT blocks to render.")
 
-    rungs = [_rung_chain(out, blocks_by_id, block_index) for out in outputs]
+    fan_out = _fan_out_counts(blocks, blocks_by_id)
+    shared_ids = {
+        bid for bid, count in fan_out.items()
+        if count > 1 and blocks_by_id[bid].get("type") != "OUTPUT"
+    }
+
+    rung_data = [_rung_chain(out, blocks_by_id, block_index, shared_ids) for out in outputs]
 
     BLOCK_W, BLOCK_H = 80, 40
     GAP, SIDE_PAD, RAIL_MARGIN = 50, 40, 30
     TOP_MARGIN, RUNG_SPACING = 20, 90
     RAIL_TOP = TOP_MARGIN
 
-    left_rail_x = RAIL_MARGIN
-    first_box_x = left_rail_x + SIDE_PAD
+    left_rail_x  = RAIL_MARGIN
+    first_box_x  = left_rail_x + SIDE_PAD
+    has_shared   = bool(shared_ids)
+    shared_col_x = first_box_x
+    # When any block is shared, every rung's own chain is shifted one slot
+    # right so the shared column has room, keeping every rung's boxes aligned.
+    local_start_x = first_box_x + (BLOCK_W + GAP) if has_shared else first_box_x
+    bus_x = shared_col_x + BLOCK_W + (GAP / 2) if has_shared else None
 
     rung_box_xs = [
-        [first_box_x + j * (BLOCK_W + GAP) for j in range(len(chain))]
-        for chain in rungs
+        [local_start_x + j * (BLOCK_W + GAP) for j in range(len(chain))]
+        for chain, _shared_entries in rung_data
     ]
     right_rail_x = max(xs[-1] for xs in rung_box_xs) + BLOCK_W + SIDE_PAD
     width        = right_rail_x + RAIL_MARGIN
 
-    rung_ys     = [TOP_MARGIN + 45 + i * RUNG_SPACING for i in range(len(rungs))]
+    rung_ys     = [TOP_MARGIN + 45 + i * RUNG_SPACING for i in range(len(rung_data))]
     RAIL_BOTTOM = rung_ys[-1] + 45
     height      = RAIL_BOTTOM + 20
 
@@ -192,13 +274,17 @@ def render_ladder_svg(logojson: dict) -> str:
     parts.append(f'<line x1="{right_rail_x}" y1="{RAIL_TOP}" x2="{right_rail_x}" y2="{RAIL_BOTTOM}" '
                  f'stroke="{RAIL_COLOR}" stroke-width="2"/>')
 
-    for rung_num, (chain, box_xs, rung_y) in enumerate(zip(rungs, rung_box_xs, rung_ys), start=1):
+    for rung_num, ((chain, shared_entries), box_xs, rung_y) in enumerate(
+        zip(rung_data, rung_box_xs, rung_ys), start=1
+    ):
         box_y = int(rung_y - BLOCK_H / 2)
 
-        # Rung wire — drawn first so blocks sit visually on top of it
-        parts.append(f'<line x1="{left_rail_x}" y1="{rung_y}" x2="{right_rail_x}" y2="{rung_y}" '
+        # If this rung is fed by a shared block, its wire starts at the local
+        # chain instead of the left rail — the branch wire (drawn later, once
+        # all rungs are known) fills in the left_rail_x..local_start_x gap.
+        line_start_x = local_start_x if shared_entries else left_rail_x
+        parts.append(f'<line x1="{line_start_x}" y1="{rung_y}" x2="{right_rail_x}" y2="{rung_y}" '
                      f'stroke="{RAIL_COLOR}" stroke-width="2"/>')
-        # Rung number label
         parts.append(
             f'<text x="{left_rail_x - 14}" y="{rung_y + 4}" font-size="10" font-weight="bold" '
             f'fill="{ID_LABEL_COLOR}" text-anchor="middle">{rung_num}</text>'
@@ -206,48 +292,42 @@ def render_ladder_svg(logojson: dict) -> str:
 
         for bx, (kind, block_id) in zip(box_xs, chain):
             if kind == "warning":
-                # Rule 11 violation that slipped past validation: another
-                # OUTPUT block was referenced here. Flag it instead of
-                # drawing it as a normal block, and don't trace past it.
-                parts.append(
-                    f'<rect x="{bx}" y="{box_y}" width="{BLOCK_W}" height="{BLOCK_H}" rx="4" ry="4" '
-                    f'fill="{_WARNING_STYLE["fill"]}" stroke="{_WARNING_STYLE["stroke"]}" '
-                    f'stroke-width="1.5" stroke-dasharray="4,3"/>'
-                )
-                parts.append(
-                    f'<text x="{bx + BLOCK_W / 2}" y="{box_y - 8}" font-size="9" fill="{ID_LABEL_COLOR}" '
-                    f'text-anchor="middle">{_esc(block_id)}</text>'
-                )
-                parts.append(
-                    f'<text x="{bx + BLOCK_W / 2}" y="{box_y + 17}" font-size="11" font-weight="bold" '
-                    f'fill="{_WARNING_STYLE["text"]}" text-anchor="middle">INVALID</text>'
-                )
-                parts.append(
-                    f'<text x="{bx + BLOCK_W / 2}" y="{box_y + 31}" font-size="9" fill="{_WARNING_STYLE["text"]}" '
-                    f'text-anchor="middle">{_esc(block_id)} is OUTPUT</text>'
-                )
+                _draw_ladder_box(parts, bx, box_y, BLOCK_W, block_id, warning=True)
+            else:
+                _draw_ladder_box(parts, bx, box_y, BLOCK_W, block_id, blocks_by_id[block_id])
+
+    # Shared blocks — drawn once each, positioned at the vertical average of
+    # the rungs that read them, with a trunk-and-branch wire to each one.
+    if has_shared:
+        shared_feeds = {sid: [] for sid in shared_ids}
+        for (chain, shared_entries), box_xs, rung_y in zip(rung_data, rung_box_xs, rung_ys):
+            chain_ids = [bid for _kind, bid in chain]
+            for sid, consumer in shared_entries:
+                target_x = box_xs[chain_ids.index(consumer)] if consumer in chain_ids else local_start_x
+                shared_feeds[sid].append((rung_y, target_x))
+
+        for sid in sorted(shared_ids, key=lambda bid: block_index[bid]):
+            feeds = shared_feeds[sid]
+            if not feeds:
                 continue
+            feed_ys       = [y for y, _x in feeds]
+            shared_y      = sum(feed_ys) / len(feed_ys)
+            shared_box_y  = int(shared_y - BLOCK_H / 2)
+            trunk_top     = min(feed_ys + [shared_y])
+            trunk_bottom  = max(feed_ys + [shared_y])
 
-            block = blocks_by_id[block_id]
-            btype = block.get("type", "")
-            style = _TYPE_STYLE.get(btype, _PURPLE_STYLE)
+            # Wires first, so the shared box renders on top of them
+            parts.append(f'<line x1="{left_rail_x}" y1="{shared_y}" x2="{shared_col_x}" y2="{shared_y}" '
+                         f'stroke="{RAIL_COLOR}" stroke-width="2"/>')
+            parts.append(f'<line x1="{shared_col_x + BLOCK_W}" y1="{shared_y}" x2="{bus_x}" y2="{shared_y}" '
+                         f'stroke="{RAIL_COLOR}" stroke-width="2"/>')
+            parts.append(f'<line x1="{bus_x}" y1="{trunk_top}" x2="{bus_x}" y2="{trunk_bottom}" '
+                         f'stroke="{RAIL_COLOR}" stroke-width="2"/>')
+            for fy, fx in feeds:
+                parts.append(f'<line x1="{bus_x}" y1="{fy}" x2="{fx}" y2="{fy}" '
+                             f'stroke="{RAIL_COLOR}" stroke-width="2"/>')
 
-            parts.append(
-                f'<rect x="{bx}" y="{box_y}" width="{BLOCK_W}" height="{BLOCK_H}" rx="4" ry="4" '
-                f'fill="{style["fill"]}" stroke="{style["stroke"]}" stroke-width="1.5"/>'
-            )
-            parts.append(
-                f'<text x="{bx + BLOCK_W / 2}" y="{box_y - 8}" font-size="9" fill="{ID_LABEL_COLOR}" '
-                f'text-anchor="middle">{_esc(block_id)}</text>'
-            )
-            parts.append(
-                f'<text x="{bx + BLOCK_W / 2}" y="{box_y + 17}" font-size="11" font-weight="bold" '
-                f'fill="{style["text"]}" text-anchor="middle">{_esc(btype)}</text>'
-            )
-            parts.append(
-                f'<text x="{bx + BLOCK_W / 2}" y="{box_y + 31}" font-size="9" fill="{style["text"]}" '
-                f'text-anchor="middle">{_esc(_ladder_line2(block))}</text>'
-            )
+            _draw_ladder_box(parts, shared_col_x, shared_box_y, BLOCK_W, sid, blocks_by_id[sid])
 
     parts.append("</svg>")
     return "\n".join(parts)
@@ -507,10 +587,22 @@ if __name__ == "__main__":
         ],
     }
 
+    circuit_shared_block = {
+        "description": "Motor control with shared latch",
+        "blocks": [
+            {"id": "B1", "type": "LATCH", "set": "I1", "reset": "I2"},
+            {"id": "B2", "type": "OUTPUT", "input": "B1", "pin": "Q1"},
+            {"id": "B3", "type": "OUTPUT", "input": "B1", "pin": "Q2"},
+            {"id": "B4", "type": "ON_DELAY", "input": "B1", "T": "10s"},
+            {"id": "B5", "type": "OUTPUT", "input": "B4", "pin": "Q3"},
+        ],
+    }
+
     for label, circuit in [
         ("Circuit 1 — AND + ON_DELAY + OUTPUT", circuit_gate_timer),
         ("Circuit 2 — LATCH + UP_COUNTER + COMPARATOR + OUTPUT", circuit_latch_counter),
         ("Circuit 3 — 3 OUTPUT blocks -> 3 ladder rungs", circuit_multi_output),
+        ("Circuit 4 — B1 shared across 3 rungs, drawn once", circuit_shared_block),
     ]:
         print("-" * 70)
         print(label)
